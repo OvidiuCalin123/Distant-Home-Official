@@ -19,7 +19,7 @@ public class PlayerMovement : MonoBehaviour
     private bool isInMakeCameraBigZone = false;
 
     public GameObject mouseClickGroundEffect;
-    private bool effectInstantiated = false;
+    private GameObject currentEffect;
 
     void Start()
     {
@@ -33,13 +33,18 @@ public class PlayerMovement : MonoBehaviour
         if (ais[0].reachedDestination)
         {
             canWalk = false;
+
+            // Destroy the effect if the player reached the destination
+            if (currentEffect != null)
+            {
+                Destroy(currentEffect);
+            }
         }
 
         if (!EventSystem.current.IsPointerOverGameObject())
         {
             PointAndClick(ais[0]);
         }
-
 
         anim2d.SetBool("canWalk", canWalk);
 
@@ -48,73 +53,61 @@ public class PlayerMovement : MonoBehaviour
 
     void PointAndClick(IAstarAI ai)
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            effectInstantiated = false;
-        }
-
         if (Input.GetMouseButton(0))
         {
             Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             LayerMask mask = 1 << 6;
 
             RaycastHit2D hit = Physics2D.Raycast(mousePos, Vector2.zero, Mathf.Infinity, mask);
-
             RaycastHit2D hit2 = Physics2D.Raycast(mousePos, Vector2.zero, Mathf.Infinity);
 
-            if(hit2.collider != null)
+            if (hit2.collider != null && hit2.collider.CompareTag("TicketGuy"))
             {
+                canWalk = true;
+                ai.destination = hit2.collider.gameObject.transform.position;
 
-                if (hit2.collider.CompareTag("TicketGuy"))
+                // Flip player based on mouse click position
+                if (mousePos.x < transform.position.x)
                 {
-
-                    
-                    canWalk = true;
-
-                    ai.destination = hit2.collider.gameObject.transform.position;
-
-                    Vector3 playerPosition = transform.position;
-
-                    // Flip player based on mouse click position
-                    if (mousePos.x < playerPosition.x)
-                    {
-                        // Click is to the left of the player
-                        transform.rotation = Quaternion.Euler(0, 180, 0);
-                    }
-                    else
-                    {
-                        // Click is to the right of the player
-                        transform.rotation = Quaternion.Euler(0, 0, 0);
-                    }
-
+                    transform.rotation = Quaternion.Euler(0, 180, 0);
+                }
+                else
+                {
+                    transform.rotation = Quaternion.Euler(0, 0, 0);
                 }
             }
-            
 
             if (hit.collider != null)
             {
-
-                if (effectInstantiated == false)
+                // Destroy the old effect if it exists
+                if (currentEffect != null)
                 {
-                    Instantiate(mouseClickGroundEffect, hit2.point, Quaternion.identity);
-                    effectInstantiated = true;
+                    Destroy(currentEffect);
+                }
+
+                // Instantiate the new effect at the clicked position
+                currentEffect = Instantiate(mouseClickGroundEffect, hit.point, Quaternion.identity);
+
+                // Flip the effect if the click is to the left of the player
+                if (mousePos.x < transform.position.x)
+                {
+                    currentEffect.transform.localScale = new Vector3(-0.6f, 0.6f, 1);  // Flip the effect on the X axis
+                }
+                else
+                {
+                    currentEffect.transform.localScale = new Vector3(0.6f, 0.6f, 1);   // Ensure the effect is not flipped
                 }
 
                 canWalk = true;
                 ai.destination = hit.point;
 
-                // Calculate player position
-                Vector3 playerPosition = transform.position;
-
                 // Flip player based on mouse click position
-                if (mousePos.x < playerPosition.x)
+                if (mousePos.x < transform.position.x)
                 {
-                    // Click is to the left of the player
                     transform.rotation = Quaternion.Euler(0, 180, 0);
                 }
                 else
                 {
-                    // Click is to the right of the player
                     transform.rotation = Quaternion.Euler(0, 0, 0);
                 }
             }
