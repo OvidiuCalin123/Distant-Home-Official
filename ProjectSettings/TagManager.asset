@@ -7,6 +7,12 @@ TagManager:
   - MakeCameraBig
   - TicketGuy
   - EXIT_WALL
+  - Coin
+  - thrash_bin
+  - ground
+  - newspaper_guy
+  - NextDialogue
+  - PrevDialogue
   layers:
   - Default
   - TransparentFX
@@ -18,7 +24,7 @@ TagManager:
   - Obstacle
   - Player
   - Cape
-  - 
+  - NPC
   - 
   - 
   - 

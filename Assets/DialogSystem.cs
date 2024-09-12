@@ -19,19 +19,11 @@ public class DialogSystem : MonoBehaviour
     // This method will be called when the sprite is clicked
     public void OnSpriteClick(GameObject clickedObject)
     {
-        Debug.Log(clickedObject);
         if (clickedObject.CompareTag("TicketGuy"))
         {
-            Debug.Log("Nice");
-            Debug.Log(player.ais[0].reachedDestination);
             SetDialogName(clickedObject.tag);
         }
-    }
-
-    public void exitDialog()
-    {
-        canSetDialogWindow = false;
-        dialog.SetActive(false);
+        
     }
 
     public void SetDialogName(string name)
@@ -63,16 +55,48 @@ public class DialogSystem : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            Vector2 worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            RaycastHit2D hit3 = Physics2D.Raycast(worldPoint, Vector2.zero);
+            canSetDialogWindow = false;
 
-            if (hit3.collider != null)
+            Vector2 worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            RaycastHit2D[] hits = Physics2D.RaycastAll(worldPoint, Vector2.zero);
+
+            RaycastHit2D? mostRelevantHit = null;
+
+            foreach (var hit in hits)
             {
-                if (!hit3.collider.CompareTag("TicketGuy"))
+                if (hit.collider.tag != "NextDialogue")
                 {
-                    SetCursor(clickCursorTexture); // Change to click cursor only if not clicking on TicketGuy
+                    //dialog.SetActive(false);
                 }
-                OnSpriteClick(hit3.collider.gameObject);
+                
+
+                if (hit.collider != null)
+                {
+                    // Check for relevant tags
+                    if (hit.collider.CompareTag("TicketGuy") || hit.collider.CompareTag("Coin") || hit.collider.CompareTag("thrash_bin") || hit.collider.CompareTag("newspaper_guy"))
+                    {
+                        // If this is the first relevant object, or if it's above the currently selected one
+                        if (mostRelevantHit == null || hit.collider.transform.position.z > mostRelevantHit.Value.collider.transform.position.z)
+                        {
+                            mostRelevantHit = hit; // Prioritize this object
+                        }
+                    }
+                }
+            }
+
+            SetCursor(clickCursorTexture);
+
+            if (mostRelevantHit.HasValue)
+            {
+                var hitCollider = mostRelevantHit.Value.collider;
+
+                // Change cursor if the relevant object is not "TicketGuy"
+                if (hitCollider.CompareTag("TicketGuy") || hitCollider.CompareTag("Coin") || hitCollider.CompareTag("thrash_bin") || hitCollider.CompareTag("newspaper_guy"))
+                {
+                    SetCursor(customCursorTexture);
+                }
+
+                OnSpriteClick(hitCollider.gameObject);
             }
         }
         else if (Input.GetMouseButtonUp(0))
@@ -81,26 +105,35 @@ public class DialogSystem : MonoBehaviour
         }
     }
 
+
     void DetectMouseHover()
     {
         Vector2 worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        RaycastHit2D hit = Physics2D.Raycast(worldPoint, Vector2.zero);
+        RaycastHit2D[] hits = Physics2D.RaycastAll(worldPoint, Vector2.zero);
 
-        if (hit.collider != null && hit.collider.CompareTag("TicketGuy"))
+        bool foundTaggedObject = false;
+
+        foreach (var hit in hits)
         {
-            if (!isHovering)
+            if (hit.collider != null)
             {
-                isHovering = true;
-                SetCursor(customCursorTexture);
+                if (hit.collider.CompareTag("TicketGuy") || hit.collider.CompareTag("Coin") || hit.collider.CompareTag("thrash_bin") || hit.collider.CompareTag("newspaper_guy"))
+                {
+                    foundTaggedObject = true;
+                    if (!isHovering)
+                    {
+                        isHovering = true;
+                        SetCursor(customCursorTexture);
+                    }
+                    break;
+                }
             }
         }
-        else
+
+        if (!foundTaggedObject && isHovering)
         {
-            if (isHovering)
-            {
-                isHovering = false;
-                SetCursor(defaultCursorTexture);
-            }
+            isHovering = false;
+            SetCursor(defaultCursorTexture);
         }
     }
 

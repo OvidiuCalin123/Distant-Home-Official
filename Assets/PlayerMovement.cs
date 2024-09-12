@@ -11,8 +11,8 @@ public class PlayerMovement : MonoBehaviour
     public LayerMask mask;
     public Transform target;
     public IAstarAI[] ais;
-    public float maxCameraSize = 7f;
-    public float minCameraSize = 6f;
+    public float maxCameraSize = 7.4f;
+    public float minCameraSize = 6.6f;
     public float cameraAdjustSpeed = 0.1f;
 
     private CinemachineVirtualCamera vcam;
@@ -21,11 +21,45 @@ public class PlayerMovement : MonoBehaviour
     public GameObject mouseClickGroundEffect;
     private GameObject currentEffect;
 
+    public GameObject clickedObject;
+
+    public bool pickedInteractableDestination;
+
+    private void handleInteractiveWorldEvent()
+    {
+        if (clickedObject != null)
+        {
+            Debug.Log(clickedObject.tag);
+
+            if (clickedObject.tag == "thrash_bin")
+            {
+                clickedObject.GetComponent<Animator>().SetBool("canOpenTrash", true);
+                clickedObject.GetComponent<Collider2D>().enabled = false;
+            }
+            else if (clickedObject.tag == "Coin")
+            {
+                Destroy(clickedObject);
+            }
+            else if (clickedObject.tag == "newspaper_guy")
+            {
+                clickedObject.transform.Find("Npc_Dialogue").gameObject.SetActive(true);
+                clickedObject.transform.Find("Npc_Dialogue").gameObject.transform.Find("Dialogue_Background").gameObject.GetComponent<DialogueNavigation>().playerNearNPC = true;
+                    
+            }
+            else if(clickedObject.tag == "NextDialogue")
+            {
+                clickedObject.GetComponent<DialogueNavigation>().dialogueState += 1;
+                clickedObject.GetComponent<DialogueNavigation>().playerNearNPC = true;
+            }
+        }
+    }
+
     void Start()
     {
         vcam = FindObjectOfType<CinemachineVirtualCamera>();
         anim2d = GetComponent<Animator>();
         ais = FindObjectsOfType<MonoBehaviour>().OfType<IAstarAI>().ToArray();
+        pickedInteractableDestination = false;
     }
 
     void Update()
@@ -34,12 +68,18 @@ public class PlayerMovement : MonoBehaviour
         {
             canWalk = false;
 
-            // Destroy the effect if the player reached the destination
+            if (pickedInteractableDestination)
+            {
+                pickedInteractableDestination = false;
+                handleInteractiveWorldEvent();
+            }
+           
             if (currentEffect != null)
             {
                 Destroy(currentEffect);
             }
         }
+
 
         if (!EventSystem.current.IsPointerOverGameObject())
         {
@@ -51,20 +91,50 @@ public class PlayerMovement : MonoBehaviour
         AdjustCameraSize();
     }
 
-    void PointAndClick(IAstarAI ai)
+    private void handleSpawnGroundClickEffect(Vector2 mousePos, RaycastHit2D? mostRelevantHit)
     {
-        if (Input.GetMouseButton(0))
+        if (clickedObject != null)
         {
-            Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            LayerMask mask = 1 << 6;
-
-            RaycastHit2D hit = Physics2D.Raycast(mousePos, Vector2.zero, Mathf.Infinity, mask);
-            RaycastHit2D hit2 = Physics2D.Raycast(mousePos, Vector2.zero, Mathf.Infinity);
-
-            if (hit2.collider != null && hit2.collider.CompareTag("TicketGuy"))
+            if (clickedObject.layer == 6)
             {
+
+                currentEffect = Instantiate(mouseClickGroundEffect, mostRelevantHit.Value.point, Quaternion.identity);
+
+                if (mousePos.x < transform.position.x)
+                {
+                    currentEffect.transform.localScale = new Vector3(-0.6f, 0.6f, 1);
+                }
+                else
+                {
+                    currentEffect.transform.localScale = new Vector3(0.6f, 0.6f, 1);
+                }
+            }
+        }
+    }
+
+    private void handleNoMovementWhenClickingDialogue(IAstarAI ai, RaycastHit2D? mostRelevantHit, Vector2 mousePos)
+    {
+        if (clickedObject.layer != 6)
+        {
+            pickedInteractableDestination = true;
+        }
+
+        if (clickedObject.tag != "NextDialogue")
+        {
+            
+            if (mostRelevantHit.HasValue)
+            {
+                var hitCollider = mostRelevantHit.Value.collider;
                 canWalk = true;
-                ai.destination = hit2.collider.gameObject.transform.position;
+
+                if (clickedObject.layer == 10)
+                {
+                    ai.destination = clickedObject.transform.position;
+                }
+                else
+                {
+                    ai.destination = mostRelevantHit.Value.point;
+                }
 
                 // Flip player based on mouse click position
                 if (mousePos.x < transform.position.x)
@@ -75,44 +145,62 @@ public class PlayerMovement : MonoBehaviour
                 {
                     transform.rotation = Quaternion.Euler(0, 0, 0);
                 }
-            }
 
-            if (hit.collider != null)
-            {
-                // Destroy the old effect if it exists
+                // Handle ground click effect
                 if (currentEffect != null)
                 {
                     Destroy(currentEffect);
                 }
 
-                // Instantiate the new effect at the clicked position
-                currentEffect = Instantiate(mouseClickGroundEffect, hit.point, Quaternion.identity);
-
-                // Flip the effect if the click is to the left of the player
-                if (mousePos.x < transform.position.x)
-                {
-                    currentEffect.transform.localScale = new Vector3(-0.6f, 0.6f, 1);  // Flip the effect on the X axis
-                }
-                else
-                {
-                    currentEffect.transform.localScale = new Vector3(0.6f, 0.6f, 1);   // Ensure the effect is not flipped
-                }
-
-                canWalk = true;
-                ai.destination = hit.point;
-
-                // Flip player based on mouse click position
-                if (mousePos.x < transform.position.x)
-                {
-                    transform.rotation = Quaternion.Euler(0, 180, 0);
-                }
-                else
-                {
-                    transform.rotation = Quaternion.Euler(0, 0, 0);
-                }
+                handleSpawnGroundClickEffect(mousePos, mostRelevantHit);
             }
         }
     }
+
+    void PointAndClick(IAstarAI ai)
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+
+            Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
+            RaycastHit2D[] hits = Physics2D.RaycastAll(mousePos, Vector2.zero, Mathf.Infinity);
+
+            RaycastHit2D? mostRelevantHit = null;
+
+            foreach (var hit in hits)
+            {
+                if (hit.collider != null)
+                {
+                    
+                    if (hit.collider.tag != "NextDialogue")
+                    {
+                        if (clickedObject != null)
+                        {
+                            if (clickedObject.GetComponent<DialogueNavigation>() != null)
+                            {
+                                clickedObject.GetComponent<DialogueNavigation>().playerNearNPC = false;
+                            }
+                        }
+
+                        
+                        if (mostRelevantHit == null || hit.collider.transform.position.z > mostRelevantHit.Value.collider.transform.position.z)
+                        {
+                            mostRelevantHit = hit;
+                        }
+                    }
+                    
+                    clickedObject = hit.collider.gameObject;
+                }
+            }
+
+            handleNoMovementWhenClickingDialogue(ai, mostRelevantHit, mousePos);
+
+            
+        }
+    }
+
+
 
     private void OnTriggerStay2D(Collider2D collision)
     {
