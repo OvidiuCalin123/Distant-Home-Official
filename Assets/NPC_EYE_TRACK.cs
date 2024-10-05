@@ -9,22 +9,33 @@ public class NPC_EYE_TRACK : MonoBehaviour
     public Transform lookAtPoint;
     private Transform player;
 
-    private Quaternion initialRotationLeft;
-    private Quaternion initialRotationRight;
+    public Quaternion initialRotationLeft;
+    public Quaternion initialRotationRight;
 
     // Start is called before the first frame update
     void Start()
     {
-        // Store initial rotations
-        if (eyeLeft != null)
-        {
-            initialRotationLeft = eyeLeft.localRotation;
-        }
+        
+        initialRotationLeft = eyeLeft.localRotation;
+        initialRotationRight = eyeRight.localRotation;
+        
+    }
 
-        if (eyeRight != null)
+    void Update()
+    {
+        if (gameObject.GetComponent<NPC_beingRobbed>())
         {
-            initialRotationRight = eyeRight.localRotation;
+            if (gameObject.GetComponent<NPC_beingRobbed>().anim.GetBool("isBeingRobbed") == true)
+            {
+                RotateEyesTowardsPoint();
+            }
+
+            if (gameObject.GetComponent<NPC_beingRobbed>().canWarnPlayer == true)
+            {
+                RotateEyesTowardsPoint();
+            }
         }
+        
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -40,16 +51,10 @@ public class NPC_EYE_TRACK : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             player = null;
-            // Reset rotations when the player exits
-            if (eyeLeft != null)
-            {
-                eyeLeft.localRotation = initialRotationLeft;
-            }
 
-            if (eyeRight != null)
-            {
-                eyeRight.localRotation = initialRotationRight;
-            }
+            eyeLeft.localRotation = initialRotationLeft;
+            eyeRight.localRotation = initialRotationRight;
+            
         }
     }
 

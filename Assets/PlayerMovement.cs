@@ -3,6 +3,8 @@ using System.Linq;
 using Pathfinding;
 using Cinemachine;
 using UnityEngine.EventSystems;
+using TMPro;
+using System.Collections.Generic;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -25,11 +27,84 @@ public class PlayerMovement : MonoBehaviour
 
     public bool pickedInteractableDestination;
 
+    public stealSystem stealSystem_ref;
+
+    public GameObject stealUIPopup;
+
+    public GameObject UI_StolenItem_text;
+
+    public Transform canvasTransform;
+
+    public GameObject[] availabelItemsItems;
+    public List<GameObject> inventoryItems = new List<GameObject>();
+
+    public SpriteRenderer playerRenderer;
+
+    public float itemOffsetUI;
+
+    public int playerCoins;
+    
+    void Start()
+    {
+        vcam = FindObjectOfType<CinemachineVirtualCamera>();
+        anim2d = GetComponent<Animator>();
+        ais = FindObjectsOfType<MonoBehaviour>().OfType<IAstarAI>().ToArray();
+        pickedInteractableDestination = false;
+        itemOffsetUI = 63.625f;
+        playerRenderer = GetComponent<SpriteRenderer>();
+    }
+
+    public void removeItemFromInventory(string itemTag)
+    {
+        foreach(GameObject item in inventoryItems)
+        {
+            if(item.tag == itemTag)
+            {
+                inventoryItems.Remove(item);
+                Destroy(item);
+                break;
+            }
+        }
+        itemOffsetUI -= 100;
+    }
+
+    public void updateInventoryItemCountUp(GameObject inventoryItem)
+    {
+        TextMeshProUGUI amountText = inventoryItem.transform.Find("amount").GetComponent<TextMeshProUGUI>();
+
+        string currentText = amountText.text;
+        int currentAmount = int.Parse(currentText.Substring(1));
+
+        int newAmount = currentAmount + 1;
+        amountText.text = $"x{newAmount}";
+    }
+
+    public void updateInventoryItemCountDown(GameObject inventoryItem, int value)
+    {
+        TextMeshProUGUI amountText = inventoryItem.transform.Find("amount").GetComponent<TextMeshProUGUI>();
+
+        string currentText = amountText.text;
+        int currentAmount = int.Parse(currentText.Substring(1));
+
+        int newAmount = currentAmount - value;
+        amountText.text = $"x{newAmount}";
+    }
+
+    public void addNewInventoryItem(GameObject item)
+    {
+        GameObject newItem = Instantiate(item, canvasTransform);
+        newItem.transform.SetAsFirstSibling();
+        RectTransform rectTransform = newItem.GetComponent<RectTransform>();
+        rectTransform.anchoredPosition = new Vector2(itemOffsetUI, -65.5f);
+
+        inventoryItems.Add(newItem);
+        itemOffsetUI += 100;
+    }
+
     private void handleInteractiveWorldEvent()
     {
         if (clickedObject != null)
         {
-            Debug.Log(clickedObject.tag);
 
             if (clickedObject.tag == "thrash_bin")
             {
@@ -39,6 +114,26 @@ public class PlayerMovement : MonoBehaviour
             else if (clickedObject.tag == "Coin")
             {
                 Destroy(clickedObject);
+
+                foreach (GameObject inventoryItem in inventoryItems)
+                {
+                    if(inventoryItem.tag == "CoinItem")
+                    {
+                        playerCoins += 1;
+                        updateInventoryItemCountUp(inventoryItem);
+                        return;
+                    }
+                }
+                foreach (GameObject item in availabelItemsItems)
+                {
+                    if (item.tag == "CoinItem")
+                    {
+                        playerCoins = 1;
+                        addNewInventoryItem(item);
+                        return;
+                    }
+                }
+                
             }
             else if (clickedObject.tag == "newspaper_guy")
             {
@@ -46,24 +141,93 @@ public class PlayerMovement : MonoBehaviour
                 clickedObject.transform.Find("Npc_Dialogue").gameObject.transform.Find("Dialogue_Background").gameObject.GetComponent<DialogueNavigation>().playerNearNPC = true;
                     
             }
-            else if(clickedObject.tag == "NextDialogue")
+            else if(clickedObject.tag == "shopVendor")
             {
-                clickedObject.GetComponent<DialogueNavigation>().dialogueState += 1;
-                clickedObject.GetComponent<DialogueNavigation>().playerNearNPC = true;
+                clickedObject.transform.Find("Npc_Dialogue").gameObject.SetActive(true);
+                clickedObject.transform.Find("Npc_Dialogue").gameObject.transform.Find("Dialogue_Background").gameObject.GetComponent<DialogueNavigation>().playerNearNPC = true;
+                clickedObject.GetComponent<shopVendor>().isTalking = true;
+
+            }else if(clickedObject.tag == "TicketGuy")
+            {
+                clickedObject.transform.Find("Npc_Dialogue").gameObject.SetActive(true);
+                clickedObject.transform.Find("Npc_Dialogue").gameObject.transform.Find("Dialogue_Background").gameObject.GetComponent<DialogueNavigation>().playerNearNPC = true;
+
+            }else if(clickedObject.tag == "ShopVendorButton")
+            {
+                clickedObject.GetComponent<shopVendorButton>().shopUI.SetActive(true);
             }
         }
     }
 
-    void Start()
+    public GameObject SpawnStolenItemUI(float posX, float posY)
     {
-        vcam = FindObjectOfType<CinemachineVirtualCamera>();
-        anim2d = GetComponent<Animator>();
-        ais = FindObjectsOfType<MonoBehaviour>().OfType<IAstarAI>().ToArray();
-        pickedInteractableDestination = false;
+        
+        GameObject itemStolenUI_screen = Instantiate(UI_StolenItem_text, canvasTransform);
+
+        
+        RectTransform rectTransform = itemStolenUI_screen.GetComponent<RectTransform>();
+
+        
+        rectTransform.anchoredPosition = new Vector2(posX, posY);
+
+        return itemStolenUI_screen;
+    }
+
+    public void endStealStateAndAddItemToInventory()
+    {
+        
+        anim2d.SetBool("canSteal", false);
+        GameObject itemStolen = SpawnStolenItemUI(-13, 70);
+        itemStolen.GetComponent<TextMeshProUGUI>().text = stealSystem_ref.stealItemUI_text;
+        //stealSystem_ref.gameObject.SetActive(false);
+
+        foreach (GameObject inventoryItem in inventoryItems)
+        {
+            if (inventoryItem.tag == "CoinItem")
+            {
+                playerCoins += 1;
+                updateInventoryItemCountUp(inventoryItem);
+                return;
+            }
+        }
+        foreach (GameObject item in availabelItemsItems)
+        {
+            if (item.tag == "CoinItem")
+            {
+                playerCoins = 1;
+                addNewInventoryItem(item);
+                return;
+            }
+        }
     }
 
     void Update()
     {
+        if (stealSystem_ref)
+        {
+            if (Input.GetKey(KeyCode.E) && stealSystem_ref.canSteal)
+            {
+
+                if (stealSystem_ref)
+                {
+                    anim2d.SetBool("canSteal", true);
+
+                    if (transform.position.x < stealSystem_ref.transform.position.x)
+                    {
+                        transform.rotation = Quaternion.Euler(0, 0, 0);
+                    }
+                    else
+                    {
+                        transform.rotation = Quaternion.Euler(0, 180, 0);
+                    }
+                }
+            }
+            else
+            {
+                anim2d.SetBool("canSteal", false);
+            }
+        }
+        
         if (ais[0].reachedDestination)
         {
             canWalk = false;
@@ -79,7 +243,6 @@ public class PlayerMovement : MonoBehaviour
                 Destroy(currentEffect);
             }
         }
-
 
         if (!EventSystem.current.IsPointerOverGameObject())
         {
@@ -114,6 +277,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void handleNoMovementWhenClickingDialogue(IAstarAI ai, RaycastHit2D? mostRelevantHit, Vector2 mousePos)
     {
+
         if (clickedObject.layer != 6)
         {
             pickedInteractableDestination = true;
@@ -129,24 +293,24 @@ public class PlayerMovement : MonoBehaviour
 
                 if (clickedObject.layer == 10)
                 {
-                    ai.destination = clickedObject.transform.position;
+                    ai.destination = clickedObject.transform.Find("playerPosition").transform.position;
                 }
                 else
                 {
                     ai.destination = mostRelevantHit.Value.point;
                 }
 
-                // Flip player based on mouse click position
                 if (mousePos.x < transform.position.x)
                 {
                     transform.rotation = Quaternion.Euler(0, 180, 0);
+                    stealUIPopup.transform.rotation = Quaternion.Euler(0, 0, 0);
                 }
                 else
                 {
                     transform.rotation = Quaternion.Euler(0, 0, 0);
+                    stealUIPopup.transform.rotation = Quaternion.Euler(0, 0, 0);
                 }
 
-                // Handle ground click effect
                 if (currentEffect != null)
                 {
                     Destroy(currentEffect);
@@ -157,56 +321,73 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    void PointAndClick(IAstarAI ai)
+    private void disableObjectStates()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (clickedObject != null)
         {
+            var dialogueNav = clickedObject.GetComponent<DialogueNavigation>();
 
-            Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-
-            RaycastHit2D[] hits = Physics2D.RaycastAll(mousePos, Vector2.zero, Mathf.Infinity);
-
-            RaycastHit2D? mostRelevantHit = null;
-
-            foreach (var hit in hits)
+            if (dialogueNav != null)
             {
-                if (hit.collider != null)
-                {
-                    
-                    if (hit.collider.tag != "NextDialogue")
-                    {
-                        if (clickedObject != null)
-                        {
-                            if (clickedObject.GetComponent<DialogueNavigation>() != null)
-                            {
-                                clickedObject.GetComponent<DialogueNavigation>().playerNearNPC = false;
-                            }
-                        }
-
-                        
-                        if (mostRelevantHit == null || hit.collider.transform.position.z > mostRelevantHit.Value.collider.transform.position.z)
-                        {
-                            mostRelevantHit = hit;
-                        }
-                    }
-                    
-                    clickedObject = hit.collider.gameObject;
-                }
+                dialogueNav.playerNearNPC = false;
             }
 
-            handleNoMovementWhenClickingDialogue(ai, mostRelevantHit, mousePos);
-
-            
+            if (clickedObject.GetComponent<shopVendor>())
+            {
+                clickedObject.GetComponent<shopVendor>().isTalking = false;
+            }
         }
     }
 
+    void PointAndClick(IAstarAI ai)
+    {
+        if (!anim2d.GetBool("canSteal"))
+        { 
+            if (Input.GetMouseButtonDown(0))
+            {
+                Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
+                RaycastHit2D hit = Physics2D.Raycast(mousePos, Vector2.zero);
+
+                disableObjectStates();
+
+                if (hit)
+                {
+                    clickedObject = hit.collider.gameObject;
+                }
+
+                if (hit.collider != null)
+                {
+                    if (hit.collider.tag != "NextDialogue")
+                    {
+
+                        handleNoMovementWhenClickingDialogue(ai, hit, mousePos);
+                    }
+                    else
+                    {
+                        clickedObject.GetComponent<DialogueNavigation>().dialogueState += 1;
+                        clickedObject.GetComponent<DialogueNavigation>().playerNearNPC = true;
+                    }
+                }
+            }
+        }
+        
+    }
 
     private void OnTriggerStay2D(Collider2D collision)
     {
         if (collision.gameObject.tag == "MakeCameraBig")
         {
             isInMakeCameraBigZone = true;
+        }
+
+        if (collision.gameObject.tag == "FullShadow")
+        {
+            Color newColor;
+            if (ColorUtility.TryParseHtmlString("#686868", out newColor)) // Convert hex to Color
+            {
+                playerRenderer.color = newColor; // Assign the parsed color
+            }
         }
     }
 
@@ -215,6 +396,15 @@ public class PlayerMovement : MonoBehaviour
         if (collision.gameObject.tag == "MakeCameraBig")
         {
             isInMakeCameraBigZone = false;
+        }
+
+        if (collision.gameObject.tag == "FullShadow")
+        {
+            Color newColor;
+            if (ColorUtility.TryParseHtmlString("#FFFFFF", out newColor)) // Convert hex to Color
+            {
+                playerRenderer.color = newColor; // Assign the parsed color
+            }
         }
     }
 
