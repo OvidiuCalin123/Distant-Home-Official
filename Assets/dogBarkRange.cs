@@ -10,9 +10,14 @@ public class dogBarkRange : MonoBehaviour
     private Animator anim;             // Animator component reference
     private Vector3 localScale;        // Local scale for flipping the GameObject
 
+    public bool followHam;
+
+    public GameObject ham;
+
     // Start is called before the first frame update
     void Start()
     {
+        followHam = false;
         // Store the starting position of the GameObject
         startPosition = transform.position;
 
@@ -31,6 +36,26 @@ public class dogBarkRange : MonoBehaviour
     {
         while (true) // Keep the coroutine running indefinitely
         {
+            if (followHam)
+            {
+                // Stop all animations
+                anim.SetBool("canRun", false);
+                anim.SetBool("canBark", false);
+
+                // Move towards the ham's position
+                while (Vector3.Distance(transform.position, ham.transform.position) > 0.1f)
+                {
+                    // Move towards the ham smoothly
+                    transform.position = Vector3.MoveTowards(transform.position, ham.transform.position, moveSpeed * Time.deltaTime);
+                    yield return null; // Wait for the next frame
+                }
+
+                // Stop all movement and animations when reaching the ham's position
+                anim.SetBool("canRun", false);
+                anim.SetBool("canBark", false);
+                yield break; // Stop the coroutine
+            }
+
             // Set canRun to true to play running animation
             anim.SetBool("canRun", true);
 
@@ -55,7 +80,6 @@ public class dogBarkRange : MonoBehaviour
                 anim.SetBool("canRun", false);
                 anim.SetBool("canBark", true);
                 yield return new WaitForSeconds(2f);
-
             }
             else
             {
@@ -77,9 +101,40 @@ public class dogBarkRange : MonoBehaviour
                 anim.SetBool("canRun", false);
                 anim.SetBool("canBark", true);
                 yield return new WaitForSeconds(2f);
-                
             }
         }
     }
 
+    // Update is called once per frame
+    void Update()
+    {
+        // Check for changes in followHam state
+        if (followHam)
+        {
+            // If followHam is true, stop the left/right movement coroutine and start moving towards ham
+            StopCoroutine(MoveLeftAndRight());
+            StartCoroutine(MoveTowardsHam());
+        }
+    }
+
+    // Coroutine for moving towards ham
+    IEnumerator MoveTowardsHam()
+    {
+        // Stop all animations
+        anim.SetBool("canRun", false);
+        anim.SetBool("canBark", false);
+
+        // Move towards the ham's position
+        while (Vector3.Distance(transform.position, ham.transform.position) > 0.1f)
+        {
+            // Move towards the ham smoothly
+            transform.position = Vector3.MoveTowards(transform.position, ham.transform.position, moveSpeed * Time.deltaTime);
+            yield return null; // Wait for the next frame
+        }
+
+        // Stop all movement and animations when reaching the ham's position
+        anim.SetBool("canRun", false);
+        anim.SetBool("canBark", false);
+        yield break; // Stop the coroutine
+    }
 }

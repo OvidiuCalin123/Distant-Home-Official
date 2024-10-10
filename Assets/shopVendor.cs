@@ -48,13 +48,13 @@ public class shopVendor : MonoBehaviour
     {
         if(movingRight && transform.rotation.eulerAngles.y == 180)
         {
-            transform.rotation = Quaternion.Euler(0f, 0f, 0f);
+            transform.rotation = Quaternion.Euler(0f, 0f, -1f);
             dialogue.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
 
         }
         else if(!movingRight && transform.rotation.eulerAngles.y == 0)
         {
-            transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+            transform.rotation = Quaternion.Euler(0f, 180f, -1f);
             dialogue.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
         }
         // Move towards the right or left boundary depending on direction
@@ -113,13 +113,13 @@ public class shopVendor : MonoBehaviour
         if (movingRight)
         {
             // Face the right direction (no rotation)
-            transform.rotation = Quaternion.Euler(0f, 0f, 0f);
+            transform.rotation = Quaternion.Euler(0f, 0f, -1f);
             dialogue.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
         }
         else
         {
             // Face the left direction (rotate 180 degrees around the Y-axis)
-            transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+            transform.rotation = Quaternion.Euler(0f, 180f, -1f);
             dialogue.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
         }
     }
@@ -136,12 +136,12 @@ public class shopVendor : MonoBehaviour
         if (direction.x > 0)
         {
             // If player is to the right, face right (default direction)
-            transform.rotation = Quaternion.Euler(0f, 0f, 0f);
+            transform.rotation = Quaternion.Euler(0f, 0f, -1f);
         }
         else
         {
             // If player is to the left, rotate to face left
-            transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+            transform.rotation = Quaternion.Euler(0f, 180f, -1f);
         }
 
         // Ensure the dialogue box doesn't rotate with the NPC

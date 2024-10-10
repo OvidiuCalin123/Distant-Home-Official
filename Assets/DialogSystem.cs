@@ -14,7 +14,11 @@ public class DialogSystem : MonoBehaviour
     public Texture2D defaultCursorTexture;
     public Texture2D customCursorTexture;
     public Texture2D clickCursorTexture;
+    public Texture2D inventoryDragCursorTexture;
+
     private bool isHovering = false;
+
+    public bool isDraggingInventoryItem;
 
     enum objectType
     {
@@ -88,15 +92,27 @@ public class DialogSystem : MonoBehaviour
         {
             if (hit.collider != null)
             {
+                
                 if (hit.collider.gameObject.layer == (int)objectType.interactable)
                 {
                     foundTaggedObject = true;
-                    if (!isHovering)
+
+                    if (isDraggingInventoryItem && !isHovering)
                     {
                         isHovering = true;
-                        SetCursor(customCursorTexture);
+                        SetCursor(inventoryDragCursorTexture);
                     }
+                    else
+                    {
+                        if (!isHovering)
+                        {
+                            isHovering = true;
+                            SetCursor(customCursorTexture);
+                        }
+                    }
+
                     break;
+                    
                 }
             }
         }
@@ -106,10 +122,13 @@ public class DialogSystem : MonoBehaviour
             isHovering = false;
             SetCursor(defaultCursorTexture);
         }
+        
+        
     }
 
     void SetCursor(Texture2D cursorTexture)
     {
+
         int newWidth = (int)(cursorTexture.width * 0.3f);
         int newHeight = (int)(cursorTexture.height * 0.3f);
 

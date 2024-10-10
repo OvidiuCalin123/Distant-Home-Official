@@ -43,6 +43,12 @@ public class PlayerMovement : MonoBehaviour
     public float itemOffsetUI;
 
     public int playerCoins;
+
+    public GameObject hamForTheDog;
+
+    public Transform spawnPointHamForTheDog;
+
+    public dogBarkRange DogQuest;
     
     void Start()
     {
@@ -52,6 +58,15 @@ public class PlayerMovement : MonoBehaviour
         pickedInteractableDestination = false;
         itemOffsetUI = 63.625f;
         playerRenderer = GetComponent<SpriteRenderer>();
+    }
+
+    public void setThrowHamToFalse()
+    {
+        DogQuest.ham = Instantiate(hamForTheDog, new Vector3(spawnPointHamForTheDog.position.x, spawnPointHamForTheDog.position.y), Quaternion.identity);
+        anim2d.SetBool("canThrowHam", false);
+        DogQuest.followHam = true;
+        DogQuest.GetComponentInParent<Collider2D>().enabled = false;
+        DogQuest.transform.parent.gameObject.transform.Find("guy").GetComponent<Collider2D>().enabled = true;
     }
 
     public void removeItemFromInventory(string itemTag)
@@ -283,7 +298,7 @@ public class PlayerMovement : MonoBehaviour
             pickedInteractableDestination = true;
         }
 
-        if (clickedObject.tag != "NextDialogue")
+        if (clickedObject.tag != "NextDialogue" && clickedObject.tag != "DogRange")
         {
             
             if (mostRelevantHit.HasValue)
@@ -351,22 +366,28 @@ public class PlayerMovement : MonoBehaviour
 
                 disableObjectStates();
 
-                if (hit)
+                if (hit.collider)
                 {
-                    clickedObject = hit.collider.gameObject;
-                }
-
-                if (hit.collider != null)
-                {
-                    if (hit.collider.tag != "NextDialogue")
+                    if (hit.collider.gameObject.layer != 7)
                     {
+                        if (hit)
+                        {
+                            clickedObject = hit.collider.gameObject;
+                        }
 
-                        handleNoMovementWhenClickingDialogue(ai, hit, mousePos);
-                    }
-                    else
-                    {
-                        clickedObject.GetComponent<DialogueNavigation>().dialogueState += 1;
-                        clickedObject.GetComponent<DialogueNavigation>().playerNearNPC = true;
+                        if (hit.collider != null)
+                        {
+                            if (hit.collider.tag != "NextDialogue")
+                            {
+
+                                handleNoMovementWhenClickingDialogue(ai, hit, mousePos);
+                            }
+                            else
+                            {
+                                clickedObject.GetComponent<DialogueNavigation>().dialogueState += 1;
+                                clickedObject.GetComponent<DialogueNavigation>().playerNearNPC = true;
+                            }
+                        }
                     }
                 }
             }
@@ -418,4 +439,5 @@ public class PlayerMovement : MonoBehaviour
             vcam.m_Lens.OrthographicSize = Mathf.MoveTowards(currentSize, targetSize, cameraAdjustSpeed * Time.deltaTime);
         }
     }
+
 }
