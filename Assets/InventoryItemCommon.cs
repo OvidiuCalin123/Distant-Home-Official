@@ -93,6 +93,37 @@ public class InventoryItemCommon : MonoBehaviour, IPointerEnterHandler, IPointer
                 player.anim2d.SetBool("canThrowHam", true);
                 player.removeItemFromInventory("ShopHam");
 
+                player.questSystem_.endConditionQuest1_4 = true;
+
+                return;
+            }
+        }
+
+        if (gameObject.CompareTag("Newspaper"))
+        {
+
+            Vector3 worldPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            worldPosition.z = 0f;
+
+            RaycastHit2D hit = Physics2D.Raycast(worldPosition, Vector2.zero);
+
+            if (hit.collider != null && hit.collider.CompareTag("GuyReadingNews"))
+            {
+                if (player.transform.position.x < player.DogQuest.transform.position.x)
+                {
+                    player.transform.rotation = Quaternion.Euler(0, 0, 0);
+                }
+                else
+                {
+                    player.transform.rotation = Quaternion.Euler(0, 180, 0);
+                }
+                //player.anim2d.SetBool("canThrowHam", true);
+                player.removeItemFromInventory("Newspaper");
+                player.questSystem_.endConditionQuest1_3 = true;
+
+                hit.collider.GetComponent<ReadingNewsPaper>().enableAnimation();
+                hit.collider.GetComponent<Animator>().SetBool("canLookAtPlayer", true);
+
                 return;
             }
         }

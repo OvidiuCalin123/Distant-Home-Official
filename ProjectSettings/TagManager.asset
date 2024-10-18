@@ -22,6 +22,9 @@ TagManager:
   - FullShadow
   - HamInstance
   - ItemInteractable
+  - Newspaper
+  - GuyReadingNews
+  - halfTicket
   layers:
   - Default
   - TransparentFX

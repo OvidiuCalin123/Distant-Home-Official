@@ -10,12 +10,12 @@ public class startQuest1_4 : MonoBehaviour
     {
         float distance = Vector3.Distance(player.transform.position, transform.position);
 
-        if (distance <= activationDistance)
-        {
-            if (!quest4.activeInHierarchy)
-            {
-                quest4.SetActive(true);
-            }
-        }
+        //if (distance <= activationDistance)
+        //{
+        //    if (!quest4.activeInHierarchy)
+        //    {
+        //        quest4.SetActive(true);
+        //    }
+        //}
     }
 }

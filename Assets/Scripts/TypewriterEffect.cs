@@ -1,37 +1,85 @@
+using UnityEngine;
 using System.Collections;
 using TMPro;
-using UnityEngine;
 
-public class TypewriterEffect : MonoBehaviour
+public class TypewriterEffect: MonoBehaviour
 {
-    private TextMeshPro tmpText;  // Automatically gets the TextMeshPro component
-    public float typingSpeed = 0.05f;  // Time between each character
 
-    private string fullText;  // The complete text
-    private bool hasStartedTyping = false;
+	public TextMeshProUGUI txt1;
+	public TextMeshProUGUI txt2;
 
-    void Awake()
+	string story;
+	string story2;
+
+	public TextMeshProUGUI storedText1;
+	public TextMeshProUGUI storedText2;
+
+	public bool nextDialogue;
+
+    private void OnDisable()
     {
-        // Automatically assign the TextMeshPro component from the GameObject this script is attached to
-        tmpText = GetComponent<TextMeshPro>();
+		txt1.text = "";
+		txt2.text = "";
+	}
+
+    private void OnEnable()
+    {
+		txt1.text = "";
+		txt2.text = "";
+
+	}
+
+    public IEnumerator PlayText()
+	{
+		foreach (char c in story)
+		{
+            if (nextDialogue)
+            {
+				txt1.text = "";
+				break;
+            }
+			txt1.text += c;
+			yield return new WaitForSeconds(0.04f);
+		}
+
+		foreach (char c in story2)
+		{
+			if (nextDialogue)
+            {
+				txt2.text = "";
+				break;
+			}
+			txt2.text += c;
+			yield return new WaitForSeconds(0.04f);
+		}
+
+		nextDialogue = false;
+	}
+
+	public IEnumerator PlayText_(string story1_, string story2_)
+	{
+
+		txt1.text = "";
+		txt2.text = "";
+
+		foreach (char c in story1_)
+		{
+			txt1.text += c;
+			yield return new WaitForSeconds(0.04f);
+		}
+
+		foreach (char c in story2_)
+		{
+			txt2.text += c;
+			yield return new WaitForSeconds(0.04f);
+		}
+
+		nextDialogue = false;
+	}
+
+    private void Update()
+    {
+
     }
 
-    void OnEnable()
-    {
-        // Start the typewriter effect when the object becomes active
-        StartCoroutine(StartTypingEffect());
-    }
-
-    IEnumerator StartTypingEffect()
-    {
-
-        fullText = tmpText.text;  // Store the complete text from TextMeshPro component
-        tmpText.text = "";  // Clear the text initially
-
-        for (int i = 0; i < fullText.Length; i++)
-        {
-            tmpText.text += fullText[i];  // Append one letter at a time
-            yield return new WaitForSeconds(typingSpeed);  // Wait before adding the next letter
-        }
-    }
 }

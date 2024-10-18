@@ -17,7 +17,6 @@ public class shopVendor : MonoBehaviour
 
     public bool isTalking;
     
-    public GameObject dialogue;
     public Transform player; // Reference to the player's Transform
 
     void Start()
@@ -49,13 +48,11 @@ public class shopVendor : MonoBehaviour
         if(movingRight && transform.rotation.eulerAngles.y == 180)
         {
             transform.rotation = Quaternion.Euler(0f, 0f, -1f);
-            dialogue.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
 
         }
         else if(!movingRight && transform.rotation.eulerAngles.y == 0)
         {
             transform.rotation = Quaternion.Euler(0f, 180f, -1f);
-            dialogue.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
         }
         // Move towards the right or left boundary depending on direction
         if (movingRight)
@@ -114,13 +111,10 @@ public class shopVendor : MonoBehaviour
         {
             // Face the right direction (no rotation)
             transform.rotation = Quaternion.Euler(0f, 0f, -1f);
-            dialogue.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
         }
         else
         {
-            // Face the left direction (rotate 180 degrees around the Y-axis)
             transform.rotation = Quaternion.Euler(0f, 180f, -1f);
-            dialogue.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
         }
     }
 
@@ -144,7 +138,6 @@ public class shopVendor : MonoBehaviour
             transform.rotation = Quaternion.Euler(0f, 180f, -1f);
         }
 
-        // Ensure the dialogue box doesn't rotate with the NPC
-        dialogue.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
+        
     }
 }

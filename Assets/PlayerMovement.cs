@@ -49,6 +49,8 @@ public class PlayerMovement : MonoBehaviour
     public Transform spawnPointHamForTheDog;
 
     public dogBarkRange DogQuest;
+
+    public QuestSystem questSystem_;
     
     void Start()
     {
@@ -67,6 +69,32 @@ public class PlayerMovement : MonoBehaviour
         DogQuest.followHam = true;
         DogQuest.GetComponentInParent<Collider2D>().enabled = false;
         DogQuest.transform.parent.gameObject.transform.Find("guy").GetComponent<Collider2D>().enabled = true;
+    }
+
+    public GameObject getAvailableItemByTag(string itemTag)
+    {
+        foreach (GameObject item in availabelItemsItems)
+        {
+            if (item.tag == itemTag)
+            {
+                return item;
+            }
+        }
+
+        return null;
+    }
+
+    public bool isItemInPlayerInventory(string itemTag)
+    {
+        foreach (GameObject item in inventoryItems)
+        {
+            if (item.tag == itemTag)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public void removeItemFromInventory(string itemTag)
@@ -116,6 +144,11 @@ public class PlayerMovement : MonoBehaviour
         itemOffsetUI += 100;
     }
 
+    public void setCanBeScaredToFalse()
+    {
+        anim2d.SetBool("canBeScared", false);
+    }
+
     private void handleInteractiveWorldEvent()
     {
         if (clickedObject != null)
@@ -132,7 +165,7 @@ public class PlayerMovement : MonoBehaviour
 
                 foreach (GameObject inventoryItem in inventoryItems)
                 {
-                    if(inventoryItem.tag == "CoinItem")
+                    if (inventoryItem.tag == "CoinItem")
                     {
                         playerCoins += 1;
                         updateInventoryItemCountUp(inventoryItem);
@@ -148,29 +181,65 @@ public class PlayerMovement : MonoBehaviour
                         return;
                     }
                 }
-                
+
             }
-            else if (clickedObject.tag == "newspaper_guy")
+            else if (clickedObject.tag == "shopVendor")
             {
-                clickedObject.transform.Find("Npc_Dialogue").gameObject.SetActive(true);
-                clickedObject.transform.Find("Npc_Dialogue").gameObject.transform.Find("Dialogue_Background").gameObject.GetComponent<DialogueNavigation>().playerNearNPC = true;
-                    
-            }
-            else if(clickedObject.tag == "shopVendor")
-            {
-                clickedObject.transform.Find("Npc_Dialogue").gameObject.SetActive(true);
-                clickedObject.transform.Find("Npc_Dialogue").gameObject.transform.Find("Dialogue_Background").gameObject.GetComponent<DialogueNavigation>().playerNearNPC = true;
                 clickedObject.GetComponent<shopVendor>().isTalking = true;
 
-            }else if(clickedObject.tag == "TicketGuy")
-            {
-                clickedObject.transform.Find("Npc_Dialogue").gameObject.SetActive(true);
-                clickedObject.transform.Find("Npc_Dialogue").gameObject.transform.Find("Dialogue_Background").gameObject.GetComponent<DialogueNavigation>().playerNearNPC = true;
-
-            }else if(clickedObject.tag == "ShopVendorButton")
+            }
+            else if (clickedObject.tag == "ShopVendorButton")
             {
                 clickedObject.GetComponent<shopVendorButton>().shopUI.SetActive(true);
+
             }
+            else if (clickedObject.GetComponent<InteractableNPCCommon>())
+            {
+                GameObject dialogue = clickedObject.GetComponent<InteractableNPCCommon>().showDialogue(); // NPC's
+
+                
+                if (clickedObject.tag == "newspaper_guy")
+                {
+                    dialogue.GetComponent<NpcDialogueCommon>().player = gameObject.GetComponent<PlayerMovement>();
+                    dialogue.GetComponent<NpcDialogueCommon>().addItemOnce = true;
+
+                    if (questSystem_.endConditionQuest1_3)
+                    {
+                        clickedObject.GetComponent<InteractableNPCCommon>().text1 = "Back already thanks for helping buddy, here as a reward I'm pretty poor ";
+                        clickedObject.GetComponent<InteractableNPCCommon>().text1_0 = "but here is half a ticket I found on the ground might help if you can find another half ";
+                    }
+                }
+
+                if (clickedObject.tag == "TicketGuy")
+                {
+                    dialogue.GetComponent<NpcDialogueCommon>().player = gameObject.GetComponent<PlayerMovement>();
+                    dialogue.GetComponent<NpcDialogueCommon>().addItemOnce = true;
+                }
+
+            }
+            else if(clickedObject.tag == "DogRange")
+            {
+                questSystem_.startConditionQuest1_4 = true;
+                
+            }
+            //else if (clickedObject.transform.Find("Npc_Dialogue"))
+            //{
+
+            //    clickedObject.GetComponent<InteractableNPCCommon>().showNPCDialogue();
+
+            //    // START QUEST 1 TASK 1
+
+            //    if (clickedObject.transform.tag == "TicketGuy")
+            //    {
+            //        bool canStartQuest2 = clickedObject.transform.Find("Npc_Dialogue").gameObject.transform.
+            //        Find("Dialogue_Background").gameObject.GetComponent<DialogueNavigation>().dialogueState == 3;
+
+            //        Debug.Log(clickedObject.transform.Find("Npc_Dialogue").gameObject.transform.
+            //        Find("Dialogue_Background").gameObject.GetComponent<DialogueNavigation>().dialogueState);
+
+            //        questSystem_.startConditionQuest1_2 = canStartQuest2;
+            //    }
+            //}
         }
     }
 
@@ -218,6 +287,12 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        if (anim2d.GetBool("canBeScared"))
+        {
+
+            ais[0].destination = gameObject.transform.position;
+        }
+
         if (stealSystem_ref)
         {
             if (Input.GetKey(KeyCode.E) && stealSystem_ref.canSteal)
@@ -298,7 +373,7 @@ public class PlayerMovement : MonoBehaviour
             pickedInteractableDestination = true;
         }
 
-        if (clickedObject.tag != "NextDialogue" && clickedObject.tag != "DogRange")
+        if (clickedObject.tag != "DogRange" && !anim2d.GetBool("canBeScared"))
         {
             
             if (mostRelevantHit.HasValue)
@@ -360,6 +435,7 @@ public class PlayerMovement : MonoBehaviour
         { 
             if (Input.GetMouseButtonDown(0))
             {
+                ais[0].canMove = true;
                 Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
                 RaycastHit2D hit = Physics2D.Raycast(mousePos, Vector2.zero);
@@ -375,18 +451,35 @@ public class PlayerMovement : MonoBehaviour
                             clickedObject = hit.collider.gameObject;
                         }
 
+                        if(clickedObject != null)
+                        {
+                            if (clickedObject.tag != "DogRange")
+                            {
+                                anim2d.SetBool("canBeScared", false);
+                            }
+                            else if(clickedObject.tag == "DogRange")
+                            {
+                                anim2d.SetBool("canBeScared", true);
+
+                                if (transform.position.x < clickedObject.transform.position.x)
+                                {
+                                    transform.rotation = Quaternion.Euler(0, 0, 0);
+                                }
+                                else
+                                {
+                                    transform.rotation = Quaternion.Euler(0, 180, 0);
+                                }
+
+                                return;
+                            }
+                        }
+                        
                         if (hit.collider != null)
                         {
-                            if (hit.collider.tag != "NextDialogue")
-                            {
-
-                                handleNoMovementWhenClickingDialogue(ai, hit, mousePos);
-                            }
-                            else
-                            {
-                                clickedObject.GetComponent<DialogueNavigation>().dialogueState += 1;
-                                clickedObject.GetComponent<DialogueNavigation>().playerNearNPC = true;
-                            }
+                            
+                            handleNoMovementWhenClickingDialogue(ai, hit, mousePos);
+                            
+                            
                         }
                     }
                 }
