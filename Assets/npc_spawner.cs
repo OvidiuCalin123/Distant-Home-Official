@@ -20,6 +20,8 @@ public class npc_spawner : MonoBehaviour
 
     private System.Random random = new System.Random(); // Random number generator
 
+    public Transform spawnParent;
+
     void Start()
     {
         // Start spawning NPCs at each of the three points
@@ -66,7 +68,8 @@ public class npc_spawner : MonoBehaviour
         Vector3 spawnPosition = new Vector3(spawnPoint.position.x, spawnPoint.position.y + randomY, spawnPoint.position.z);
 
         // Spawn the selected NPC at the adjusted position
-        Instantiate(npcPrefabs[npcIndex], spawnPosition, Quaternion.identity);
+        GameObject npc_spawn = Instantiate(npcPrefabs[npcIndex], spawnPosition, Quaternion.identity);
+        npc_spawn.transform.parent = spawnParent;
     }
 
     void SpawnUniqueNPCFar(Transform spawnPoint, List<int> selectedNPCs)
@@ -90,6 +93,7 @@ public class npc_spawner : MonoBehaviour
         Vector3 spawnPosition = new Vector3(spawnPoint.position.x, spawnPoint.position.y + randomY, spawnPoint.position.z);
 
         // Spawn the selected NPC at the adjusted position
-        Instantiate(npcPrefabsFar[npcIndex], spawnPosition, Quaternion.identity);
+        GameObject npc_far = Instantiate(npcPrefabsFar[npcIndex], spawnPosition, Quaternion.identity);
+        npc_far.transform.parent = spawnParent;
     }
 }

@@ -37,9 +37,9 @@ public class shopVendorPlayerArm : MonoBehaviour
 
         // Hide the mouse cursor
         Cursor.visible = false;
-
+        if(ham != null)
         previousParent = ham.transform.parent;
-
+        if(playerCoinsUIText != null)
         playerCoinsUIText.GetComponent<TextMeshProUGUI>().text = string.Format("x{0}", Player.playerCoins);
     }
 
@@ -106,27 +106,28 @@ public class shopVendorPlayerArm : MonoBehaviour
                 if (Player.playerCoins == 0)
                 {
 
-                    Player.removeItemFromInventory("CoinItem");
+                    Player.playerInventory.removeItemFromInventory("CoinItem");
                     
                 }
                 else
                 {
-                    foreach(GameObject item in Player.inventoryItems)
+                    foreach(GameObject item in Player.playerInventory.inventoryItems)
                     {
                         if(item.tag == "CoinItem")
                         {
-                            Player.updateInventoryItemCountDown(item, 6);
+                            Player.playerInventory.updateInventoryItemCountDown(item, 6);
                             break;
                         }
                     }
                 }
 
-                foreach (GameObject item in Player.availabelItemsItems)
+                foreach (GameObject item in Player.playerInventory.availabelItemsItems)
                 {
 
                     if (item.tag == "ShopHam")
                     {
-                        Player.addNewInventoryItem(item);
+                        Player.soundManager.playGenericItemRub();
+                        Player.playerInventory.addNewInventoryItem(item);
                         break;
                     }
                 }

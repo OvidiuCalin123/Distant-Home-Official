@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class QuestPaperMoveUp : MonoBehaviour
 {
@@ -11,6 +12,17 @@ public class QuestPaperMoveUp : MonoBehaviour
     private Coroutine moveCoroutine; // To track the running coroutine
 
     public GameObject pauseMenu;
+    public GameObject pauseButtons;
+    public GameObject musicMenu;
+
+    public AudioSource gameMusic;
+    public Slider musicSlider;  
+
+    public void handleMusicVolume()
+    {
+
+        gameMusic.volume = musicSlider.value;
+    }
 
     public void MakePauseMenuAppear()
     {
@@ -22,8 +34,32 @@ public class QuestPaperMoveUp : MonoBehaviour
         pauseMenu.SetActive(false);
     }
 
+    public void MakeMusicMenuAppear()
+    {
+        pauseButtons.SetActive(false);
+        musicMenu.SetActive(true);
+    }
+
+    public void MakeMusicMenuDissapear()
+    {
+        musicMenu.SetActive(false);
+        pauseButtons.SetActive(true);
+    }
+
+    public void ExitGame()
+    {
+        Application.Quit();
+    }
+
     void Start()
     {
+        if (musicSlider && gameMusic != null)
+        {
+            musicSlider.value = gameMusic.volume; 
+            musicSlider.onValueChanged.AddListener(delegate { handleMusicVolume(); });
+        }
+        
+       
         originalPosition = transform.localPosition;
     }
 

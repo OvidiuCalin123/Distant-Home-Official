@@ -25,6 +25,84 @@ TagManager:
   - Newspaper
   - GuyReadingNews
   - halfTicket
+  - sewageEntrance
+  - sewageExit
+  - jumpOnBoxesStart
+  - pantString
+  - meatHook
+  - stick
+  - StringAndHook
+  - StringAndStick
+  - StringHookStick
+  - FishTicket
+  - startRatCinematic
+  - bucketSewage
+  - brickSewage
+  - brickSewageUP
+  - bucketSewagePlace
+  - bucketClimb
+  - treasure
+  - hideSewageBox
+  - hobbo
+  - treasureKey
+  - treasureKeyitem
+  - goldenRing
+  - jimmyHand
+  - ticket2
+  - halfTicket2
+  - coalPile
+  - coalItem
+  - waterBucket
+  - streetCoal
+  - waterTrail
+  - janitorLadder
+  - janitorLadderItem
+  - ladderCat
+  - climbLadderCat
+  - cinematicViktor
+  - gotToScene2
+  - middleTrainDoor
+  - OutsideTrainRamp
+  - TrainDoor
+  - CandleLightEvent
+  - candlePickup
+  - candlePickUpLightArea
+  - poorKey
+  - poorDoor
+  - KitchenSoup
+  - KitchenFatGuy
+  - poorSpider
+  - spiderBox
+  - spiderBoxPlacement
+  - spiderBoxItem
+  - paperClip
+  - buttonFat
+  - poorGirl
+  - threadBall
+  - doorStopCamera
+  - proofScarf
+  - rope
+  - pickLock
+  - pickLockThis
+  - createPickLock
+  - kitchenFork
+  - paperBall
+  - paperTrash
+  - forkAndString
+  - forkStringRope
+  - placeRopeHook
+  - outsideRopeClimb
+  - OutsideRopePoint1
+  - OutsideRopePoint2
+  - getDownTrainRope
+  - getDownTrainRopeRich
+  - richRingItem
+  - knifeRichTable
+  - sockItem
+  - plankConductor
+  - stoneConductor
+  - coalProjectile
+  - ShatteredBottle
   layers:
   - Default
   - TransparentFX
@@ -37,7 +115,7 @@ TagManager:
   - Player
   - Cape
   - Interactable
-  - 
+  - window
   - 
   - 
   - 

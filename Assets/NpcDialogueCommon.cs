@@ -37,10 +37,14 @@ public class NpcDialogueCommon : MonoBehaviour
     public bool showOnlyOnce;
 
     public GameObject NPC;
+    public Act1WorldInter act1;
+
+    
 
     private void Start()
     {
         showOnlyOnce = true;
+        holdDialoguePage = 1;
     }
 
     private void OnEnable()
@@ -62,7 +66,10 @@ public class NpcDialogueCommon : MonoBehaviour
             showOnlyOnce = false;
             QuestItemInterface.SetActive(true);
 
-            player.addNewInventoryItem(player.getAvailableItemByTag("halfTicket"));
+            player.playerInventory.addNewInventoryItem(player.playerInventory.getAvailableItemByTag("halfTicket"));
+            act1.ItemInterfaceTicket1.SetActive(true);
+            act1.ItemInterfaceTicket2.SetActive(false);
+            player.soundManager.playGenericItemRub();
             NPC.GetComponent<InteractableNPCCommon>().dontAllowDialogue = true;
 
         }
@@ -85,11 +92,12 @@ public class NpcDialogueCommon : MonoBehaviour
             {
                 if (!alreadyGotItemsFromNpcsWithTags.Contains("newspaper_guy"))
                 {
-                    foreach (GameObject item in player.availabelItemsItems)
+                    foreach (GameObject item in player.playerInventory.availabelItemsItems)
                     {
                         if (item.tag == "Newspaper")
                         {
-                            player.addNewInventoryItem(item);
+                            player.soundManager.playGenericItemRub();
+                            player.playerInventory.addNewInventoryItem(item);
                             alreadyGotItemsFromNpcsWithTags.Add("newspaper_guy");
                             break;
                         }
@@ -139,7 +147,7 @@ public class NpcDialogueCommon : MonoBehaviour
             addItemOnlyOnce();
             addQuestOnlyOnce();
 
-            holdDialoguePage = 1;
+            holdDialoguePage = 0;
 
             StartCoroutine(typeEffect.PlayText_(text4, text4_0));
         }
